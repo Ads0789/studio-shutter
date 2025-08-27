@@ -26,6 +26,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Printer } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const initialInvoice: InvoiceState = {
   company: {
@@ -64,82 +65,10 @@ const initialInvoice: InvoiceState = {
   notes: "Thank you for your business. Please make payment by the due date.",
 };
 
-const PrintButton = () => {
-  const printRef = React.useRef<HTMLDivElement>(null);
-
-  return (
-    <>
-      <InvoicePreviewWrapper ref={printRef} />
-      <ReactToPrint
-        trigger={() => (
-            <Button size="sm">
-                <Printer className="mr-2 h-4 w-4" />
-                Export PDF
-            </Button>
-        )}
-        content={() => printRef.current}
-      />
-    </>
-  );
-};
-
-const InvoicePreviewWrapper = React.forwardRef<HTMLDivElement>((props, ref) => {
-    const [data, setData] = React.useState<InvoiceState>(initialInvoice);
-
-    React.useEffect(() => {
-        const savedData = localStorage.getItem("shutterSurpriseStudioData");
-        if (savedData) {
-            try {
-                setData(JSON.parse(savedData));
-            } catch (error) {
-                console.error("Failed to parse saved data:", error);
-            }
-        }
-    }, []);
-
-    const { subTotal, grandTotal, balanceDue, totalCgst, totalSgst, totalIgst, isIntraState } = React.useMemo(() => {
-        const isIntraState = data.company.state && data.client.state && data.company.state === data.client.state;
-        let subTotal = 0;
-        let totalCgst = 0;
-        let totalSgst = 0;
-        let totalIgst = 0;
-
-        data.items.forEach(item => {
-        const itemTotal = item.quantity * item.rate;
-        subTotal += itemTotal;
-        const gstAmount = itemTotal * (item.gstRate / 100);
-        if (isIntraState) {
-            totalCgst += gstAmount / 2;
-            totalSgst += gstAmount / 2;
-        } else {
-            totalIgst += gstAmount;
-        }
-        });
-
-        const grandTotal = subTotal + totalCgst + totalSgst + totalIgst;
-        const balanceDue = grandTotal - (data.payment.amountReceived || 0);
-
-        return { subTotal, grandTotal, balanceDue, totalCgst, totalSgst, totalIgst, isIntraState };
-    }, [data.items, data.company.state, data.client.state, data.payment.amountReceived]);
-
-
-    return (
-        <div className="hidden">
-            <InvoicePreview 
-            ref={ref} 
-            data={data} 
-            totals={{ subTotal, grandTotal, balanceDue, totalCgst, totalSgst, totalIgst, isIntraState }} 
-            />
-        </div>
-    );
-});
-
-InvoicePreviewWrapper.displayName = 'InvoicePreviewWrapper';
-
-
 export default function InvoicePage() {
   const [data, setData] = React.useState<InvoiceState>(initialInvoice);
   const [isClient, setIsClient] = React.useState(false);
+  const printRef = React.useRef<HTMLDivElement>(null);
 
   const { toast } = useToast();
 
@@ -295,88 +224,107 @@ export default function InvoicePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="flex flex-col h-screen bg-background text-foreground">
       <Header
         onSave={handleSave}
         onLoadSample={handleLoadSample}
       >
-        <PrintButton />
+        <ReactToPrint
+            trigger={() => (
+                <Button size="sm">
+                    <Printer className="mr-2 h-4 w-4" />
+                    Export PDF
+                </Button>
+            )}
+            content={() => printRef.current}
+        />
       </Header>
-      <main className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-8 space-y-8">
-            <Branding
-              branding={data.branding}
-              onBrandingChange={handleBrandingChange}
-            />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <UserDetailsForm
-                title="Company Details"
-                data={data.company}
-                onDataChange={(field, value) => handleGenericChange('company', field, value)}
-                states={indianStates}
+      <main className="flex-1 overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-2 h-full">
+          <ScrollArea className="h-full">
+            <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-4xl mx-auto">
+              <Branding
+                branding={data.branding}
+                onBrandingChange={handleBrandingChange}
               />
-              <UserDetailsForm
-                title="Client Details"
-                data={data.client}
-                onDataChange={(field, value) => handleGenericChange('client', field, value)}
-                states={indianStates}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <UserDetailsForm
+                  title="Company Details"
+                  data={data.company}
+                  onDataChange={(field, value) => handleGenericChange('company', field, value)}
+                  states={indianStates}
+                />
+                <UserDetailsForm
+                  title="Client Details"
+                  data={data.client}
+                  onDataChange={(field, value) => handleGenericChange('client', field, value)}
+                  states={indianStates}
+                />
+              </div>
+              <InvoiceMetaForm 
+                invoiceNumber={data.invoiceNumber}
+                invoiceDate={data.invoiceDate}
+                dueDate={data.dueDate}
+                onSimpleChange={handleSimpleChange}
+                onDateChange={handleDateChange}
+              />
+              <InvoiceItemsTable
+                items={data.items}
+                onItemChange={handleItemChange}
+                onAddItem={addItem}
+                onRemoveItem={removeItem}
+                isIntraState={isIntraState}
+              />
+              <EventsModule
+                events={data.events}
+                onEventChange={handleEventChange}
+                onAddEvent={addEvent}
+                onRemoveEvent={removeEvent}
+              />
+              <TotalsSummary 
+                subTotal={subTotal}
+                totalCgst={totalCgst}
+                totalSgst={totalSgst}
+                totalIgst={totalIgst}
+                grandTotal={grandTotal}
+                amountReceived={data.payment.amountReceived}
+                balanceDue={balanceDue}
+                isIntraState={isIntraState}
+              />
+              <PaymentDetailsForm
+                payment={data.payment}
+                onPaymentChange={(field, value) => handleGenericChange('payment', field, value)}
+                grandTotal={grandTotal}
+                companyName={data.company.name}
+              />
+               <Card>
+                <CardHeader>
+                  <CardTitle>Notes / Terms & Conditions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Label htmlFor="notes" className="sr-only">Notes / Terms & Conditions</Label>
+                  <Textarea
+                    id="notes"
+                    value={data.notes}
+                    onChange={(e) => handleSimpleChange('notes', e.target.value)}
+                    rows={4}
+                    placeholder="E.g., 50% advance payment required."
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          </ScrollArea>
+          
+          <div className="hidden lg:block bg-muted/30 p-8 h-full overflow-auto">
+            <div className="bg-white shadow-lg mx-auto" style={{ width: '210mm', minHeight: '297mm'}}>
+              <InvoicePreview
+                ref={printRef}
+                data={data} 
+                totals={{ subTotal, grandTotal, balanceDue, totalCgst, totalSgst, totalIgst, isIntraState }} 
               />
             </div>
-            <InvoiceMetaForm 
-              invoiceNumber={data.invoiceNumber}
-              invoiceDate={data.invoiceDate}
-              dueDate={data.dueDate}
-              onSimpleChange={handleSimpleChange}
-              onDateChange={handleDateChange}
-            />
-            <InvoiceItemsTable
-              items={data.items}
-              onItemChange={handleItemChange}
-              onAddItem={addItem}
-              onRemoveItem={removeItem}
-              isIntraState={isIntraState}
-            />
-            <EventsModule
-              events={data.events}
-              onEventChange={handleEventChange}
-              onAddEvent={addEvent}
-              onRemoveEvent={removeEvent}
-            />
-             <Card>
-              <CardHeader>
-                <CardTitle>Notes / Terms & Conditions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Label htmlFor="notes" className="sr-only">Notes / Terms & Conditions</Label>
-                <Textarea
-                  id="notes"
-                  value={data.notes}
-                  onChange={(e) => handleSimpleChange('notes', e.target.value)}
-                  rows={4}
-                  placeholder="E.g., 50% advance payment required."
-                />
-              </CardContent>
-            </Card>
           </div>
-          <div className="lg:col-span-4 space-y-8 lg:sticky lg:top-24 self-start">
-            <TotalsSummary 
-              subTotal={subTotal}
-              totalCgst={totalCgst}
-              totalSgst={totalSgst}
-              totalIgst={totalIgst}
-              grandTotal={grandTotal}
-              amountReceived={data.payment.amountReceived}
-              balanceDue={balanceDue}
-              isIntraState={isIntraState}
-            />
-            <PaymentDetailsForm
-              payment={data.payment}
-              onPaymentChange={(field, value) => handleGenericChange('payment', field, value)}
-              grandTotal={grandTotal}
-              companyName={data.company.name}
-            />
-          </div>
+
         </div>
       </main>
     </div>
