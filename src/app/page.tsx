@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useReactToPrint } from "react-to-print";
+import ReactToPrint from "react-to-print";
 import {
   type InvoiceState,
   type InvoiceItem,
