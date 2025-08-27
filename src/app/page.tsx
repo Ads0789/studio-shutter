@@ -87,7 +87,7 @@ const InvoicePreviewWrapper = React.forwardRef<HTMLDivElement>((props, ref) => {
     const [data, setData] = React.useState<InvoiceState>(initialInvoice);
 
     React.useEffect(() => {
-        const savedData = localStorage.getItem("vivaahVistaData");
+        const savedData = localStorage.getItem("shutterSurpriseStudioData");
         if (savedData) {
             try {
                 setData(JSON.parse(savedData));
@@ -145,21 +145,21 @@ export default function InvoicePage() {
 
   React.useEffect(() => {
     setIsClient(true);
-    const savedData = localStorage.getItem("vivaahVistaData");
+    const savedData = localStorage.getItem("shutterSurpriseStudioData");
     if (savedData) {
       try {
         setData(JSON.parse(savedData));
       } catch (error) {
         console.error("Failed to parse saved data:", error);
-        localStorage.removeItem("vivaahVistaData");
+        localStorage.removeItem("shutterSurpriseStudioData");
       }
     } else {
-        localStorage.setItem("vivaahVistaData", JSON.stringify(initialInvoice));
+        localStorage.setItem("shutterSurpriseStudioData", JSON.stringify(initialInvoice));
     }
   }, []);
 
   React.useEffect(() => {
-    localStorage.setItem("vivaahVistaData", JSON.stringify(data));
+    localStorage.setItem("shutterSurpriseStudioData", JSON.stringify(data));
   },[data])
 
 

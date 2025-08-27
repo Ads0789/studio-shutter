@@ -11,7 +11,7 @@ const poppins = Poppins({
 
 
 export const metadata: Metadata = {
-  title: 'Vivaah Vista',
+  title: 'SHUTTER SURPRISE STUDIO',
   description: 'Elegant Wedding Invoice Generator',
 };
 

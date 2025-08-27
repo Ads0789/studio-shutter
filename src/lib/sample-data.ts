@@ -3,10 +3,10 @@ import { format } from "date-fns";
 
 export const sampleInvoice: InvoiceState = {
   company: {
-    name: "Vivaah Dreams",
+    name: "SHUTTER SURPRISE STUDIO",
     address: "123 Celebration Avenue, Royal City, RC 400051",
     phone: "9876543210",
-    email: "contact@vivaahdreams.com",
+    email: "contact@shuttersurprise.com",
     gstin: "27ABCDE1234F1Z5",
     state: "Maharashtra",
   },
@@ -18,7 +18,7 @@ export const sampleInvoice: InvoiceState = {
     gstin: "27FGHIJ5678K1Z4",
     state: "Maharashtra",
   },
-  invoiceNumber: `VV-${new Date().getFullYear()}-001`,
+  invoiceNumber: `SSS-${new Date().getFullYear()}-001`,
   invoiceDate: format(new Date(), "yyyy-MM-dd"),
   dueDate: format(new Date(new Date().setDate(new Date().getDate() + 15)), "yyyy-MM-dd"),
   items: [
@@ -70,7 +70,7 @@ export const sampleInvoice: InvoiceState = {
     },
   ],
   payment: {
-    upiId: "vivaahdreams@upi",
+    upiId: "shuttersurprise@upi",
     bankName: "Celebration Bank",
     accountNumber: "123456789012",
     ifscCode: "CELB0000123",
