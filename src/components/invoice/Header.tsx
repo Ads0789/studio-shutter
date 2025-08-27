@@ -1,19 +1,19 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Printer, Save, FileImage, Sparkles } from "lucide-react";
+import { Save, Sparkles } from "lucide-react";
 import * as React from "react";
 
 interface HeaderProps {
-  onPrint: () => void;
   onSave: () => void;
   onLoadSample: () => void;
+  children?: React.ReactNode;
 }
 
 export const Header: React.FC<HeaderProps> = ({
-  onPrint,
   onSave,
   onLoadSample,
+  children,
 }) => {
   return (
     <header className="sticky top-0 z-40 w-full bg-background/80 backdrop-blur-sm border-b">
@@ -35,11 +35,7 @@ export const Header: React.FC<HeaderProps> = ({
             <Save className="mr-2 h-4 w-4" />
             Save
           </Button>
-          <Button size="sm" onClick={onPrint}>
-            <Printer className="mr-2 h-4 w-4" />
-            Export PDF
-          </Button>
-
+          {children}
            <Button
             variant="ghost"
             size="icon"

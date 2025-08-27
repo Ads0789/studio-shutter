@@ -24,6 +24,8 @@ import { InvoicePreview } from "@/components/invoice/InvoicePreview";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Printer } from "lucide-react";
 
 const initialInvoice: InvoiceState = {
   company: {
@@ -62,12 +64,84 @@ const initialInvoice: InvoiceState = {
   notes: "Thank you for your business. Please make payment by the due date.",
 };
 
+const PrintButton = () => {
+  const printRef = React.useRef<HTMLDivElement>(null);
+
+  return (
+    <>
+      <InvoicePreviewWrapper ref={printRef} />
+      <ReactToPrint
+        trigger={() => (
+            <Button size="sm">
+                <Printer className="mr-2 h-4 w-4" />
+                Export PDF
+            </Button>
+        )}
+        content={() => printRef.current}
+      />
+    </>
+  );
+};
+
+const InvoicePreviewWrapper = React.forwardRef<HTMLDivElement>((props, ref) => {
+    const [data, setData] = React.useState<InvoiceState>(initialInvoice);
+
+    React.useEffect(() => {
+        const savedData = localStorage.getItem("vivaahVistaData");
+        if (savedData) {
+            try {
+                setData(JSON.parse(savedData));
+            } catch (error) {
+                console.error("Failed to parse saved data:", error);
+            }
+        }
+    }, []);
+
+    const { subTotal, grandTotal, balanceDue, totalCgst, totalSgst, totalIgst, isIntraState } = React.useMemo(() => {
+        const isIntraState = data.company.state && data.client.state && data.company.state === data.client.state;
+        let subTotal = 0;
+        let totalCgst = 0;
+        let totalSgst = 0;
+        let totalIgst = 0;
+
+        data.items.forEach(item => {
+        const itemTotal = item.quantity * item.rate;
+        subTotal += itemTotal;
+        const gstAmount = itemTotal * (item.gstRate / 100);
+        if (isIntraState) {
+            totalCgst += gstAmount / 2;
+            totalSgst += gstAmount / 2;
+        } else {
+            totalIgst += gstAmount;
+        }
+        });
+
+        const grandTotal = subTotal + totalCgst + totalSgst + totalIgst;
+        const balanceDue = grandTotal - (data.payment.amountReceived || 0);
+
+        return { subTotal, grandTotal, balanceDue, totalCgst, totalSgst, totalIgst, isIntraState };
+    }, [data.items, data.company.state, data.client.state, data.payment.amountReceived]);
+
+
+    return (
+        <div className="hidden">
+            <InvoicePreview 
+            ref={ref} 
+            data={data} 
+            totals={{ subTotal, grandTotal, balanceDue, totalCgst, totalSgst, totalIgst, isIntraState }} 
+            />
+        </div>
+    );
+});
+
+InvoicePreviewWrapper.displayName = 'InvoicePreviewWrapper';
+
+
 export default function InvoicePage() {
   const [data, setData] = React.useState<InvoiceState>(initialInvoice);
   const [isClient, setIsClient] = React.useState(false);
 
   const { toast } = useToast();
-  const printRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     setIsClient(true);
@@ -79,16 +153,17 @@ export default function InvoicePage() {
         console.error("Failed to parse saved data:", error);
         localStorage.removeItem("vivaahVistaData");
       }
+    } else {
+        localStorage.setItem("vivaahVistaData", JSON.stringify(initialInvoice));
     }
   }, []);
 
-  const handlePrint = useReactToPrint({
-    content: () => printRef.current,
-    documentTitle: `Invoice-${data.invoiceNumber || "draft"}`,
-  });
+  React.useEffect(() => {
+    localStorage.setItem("vivaahVistaData", JSON.stringify(data));
+  },[data])
+
 
   const handleSave = () => {
-    localStorage.setItem("vivaahVistaData", JSON.stringify(data));
     toast({
       title: "Data Saved!",
       description: "Your invoice data has been saved to your browser.",
@@ -222,10 +297,11 @@ export default function InvoicePage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Header
-        onPrint={handlePrint}
         onSave={handleSave}
         onLoadSample={handleLoadSample}
-      />
+      >
+        <PrintButton />
+      </Header>
       <main className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-8 space-y-8">
@@ -303,14 +379,6 @@ export default function InvoicePage() {
           </div>
         </div>
       </main>
-
-      <div className="hidden">
-        <InvoicePreview 
-          ref={printRef} 
-          data={data} 
-          totals={{ subTotal, grandTotal, balanceDue, totalCgst, totalSgst, totalIgst, isIntraState }} 
-        />
-      </div>
     </div>
   );
 }
