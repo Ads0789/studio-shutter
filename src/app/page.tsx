@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import ReactToPrint from "react-to-print";
+import { useReactToPrint } from "react-to-print";
 import {
   type InvoiceState,
   type InvoiceItem,
@@ -64,6 +64,32 @@ const initialInvoice: InvoiceState = {
   },
   notes: "Thank you for your business. Please make payment by the due date.",
 };
+
+// We need a class component for react-to-print to work properly.
+class InvoicePreviewWrapper extends React.Component {
+  render() {
+    // This seems weird, but it's the way to forward the ref to the component
+    // we want to print.
+    const { props } = this as any;
+    return <InvoicePreview {...props} />;
+  }
+}
+
+const PrintButton = ({ printRef }: { printRef: React.RefObject<HTMLDivElement> }) => {
+  const handlePrint = useReactToPrint({
+    content: () => printRef.current,
+  });
+
+  return (
+    <>
+      <Button size="sm" onClick={handlePrint}>
+          <Printer className="mr-2 h-4 w-4" />
+          Export PDF
+      </Button>
+    </>
+  );
+};
+
 
 export default function InvoicePage() {
   const [data, setData] = React.useState<InvoiceState>(initialInvoice);
@@ -229,15 +255,7 @@ export default function InvoicePage() {
         onSave={handleSave}
         onLoadSample={handleLoadSample}
       >
-        <ReactToPrint
-            trigger={() => (
-                <Button size="sm">
-                    <Printer className="mr-2 h-4 w-4" />
-                    Export PDF
-                </Button>
-            )}
-            content={() => printRef.current}
-        />
+        <PrintButton printRef={printRef}/>
       </Header>
       <main className="flex-1 overflow-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-2 h-full">
@@ -317,7 +335,7 @@ export default function InvoicePage() {
           
           <div className="hidden lg:block bg-muted/30 p-8 h-full overflow-auto">
             <div className="bg-white shadow-lg mx-auto" style={{ width: '210mm', minHeight: '297mm'}}>
-              <InvoicePreview
+              <InvoicePreviewWrapper
                 ref={printRef}
                 data={data} 
                 totals={{ subTotal, grandTotal, balanceDue, totalCgst, totalSgst, totalIgst, isIntraState }} 
