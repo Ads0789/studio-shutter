@@ -126,7 +126,7 @@ export const InvoicePreview = React.forwardRef<
         </section>
         
         {events.length > 0 && (
-          <section className="mb-8" style={{ pageBreakBefore: 'always' }}>
+          <section className="mb-8">
             <h3 className="font-bold uppercase text-neutral-600 border-b pb-1 mb-2">Event Summary</h3>
             {events.map(event => (
               <div key={event.id} className="mb-4" style={{ pageBreakInside: 'avoid' }}>
@@ -155,5 +155,3 @@ export const InvoicePreview = React.forwardRef<
 });
 
 InvoicePreview.displayName = "InvoicePreview";
-
-    

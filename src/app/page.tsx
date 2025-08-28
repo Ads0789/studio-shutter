@@ -81,39 +81,20 @@ const PrintButton = ({ printRef, data }: { printRef: React.RefObject<HTMLDivElem
         return;
       }
 
-      // The A4 size in 'mm' is 210 x 297. We'll use this as our base.
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-
       const canvas = await html2canvas(input, {
           scale: 3, // Higher scale for better quality
           useCORS: true,
-          logging: false, // Turn off logging for cleaner console
-          width: input.scrollWidth,
-          height: input.scrollHeight,
-          windowWidth: input.scrollWidth,
-          windowHeight: input.scrollHeight,
+          logging: false,
       });
 
       const imgData = canvas.toDataURL('image/png');
-      const imgWidth = pdfWidth; 
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const imgWidth = 210; // A4 width in mm
+      const pageHeight = 295; // A4 height in mm
+      const imgHeight = canvas.height * imgWidth / canvas.width;
       
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      // Add the first page
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pdfHeight;
-
-      // Add new pages if content overflows
-      while (heightLeft > 0) {
-        position = -pdfHeight + (position * -1); // equivalent to `position -= pdfHeight;` but avoids negative zero issues
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pdfHeight;
-      }
+      const pdf = new jsPDF('p', 'mm', [imgWidth, imgHeight]);
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
       
       pdf.save(`invoice-${data.invoiceNumber || 'download'}.pdf`);
     };
@@ -403,5 +384,3 @@ export default function InvoicePage() {
     </div>
   );
 }
-
-    
