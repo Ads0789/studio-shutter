@@ -75,33 +75,31 @@ const PrintButton = ({ printRef }: { printRef: React.RefObject<HTMLDivElement> }
     });
 
     const handleDownload = () => {
-      if (printRef.current) {
-        html2canvas(printRef.current, {
-          scale: 3, // Higher scale for better quality
-          useCORS: true, 
+      const input = printRef.current;
+      if (input) {
+        html2canvas(input, {
+          scale: 3,
+          useCORS: true,
         }).then((canvas) => {
-          const imgData = canvas.toDataURL('image/png');
-          const pdf = new jsPDF('p', 'mm', 'a4');
+          const imgData = canvas.toDataURL("image/png");
+          const pdf = new jsPDF("p", "mm", "a4");
           const pdfWidth = pdf.internal.pageSize.getWidth();
           const pdfHeight = pdf.internal.pageSize.getHeight();
           const canvasWidth = canvas.width;
           const canvasHeight = canvas.height;
           const ratio = canvasWidth / canvasHeight;
-          const width = pdfWidth;
-          const height = width / ratio;
-
+          const imgHeight = pdfWidth / ratio;
+          let heightLeft = imgHeight;
           let position = 0;
-          let pageHeight = pdf.internal.pageSize.height;
-          let heightLeft = canvas.height * (pdfWidth / canvas.width);
-          
-          pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, heightLeft);
-          heightLeft -= pageHeight;
+
+          pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
+          heightLeft -= pdfHeight;
 
           while (heightLeft > 0) {
-            position = heightLeft - (canvas.height * (pdfWidth / canvas.width));
+            position = position - pdfHeight;
             pdf.addPage();
-            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, heightLeft);
-            heightLeft -= pageHeight;
+            pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
+            heightLeft -= pdfHeight;
           }
           pdf.save("invoice.pdf");
         });
