@@ -18,6 +18,7 @@ import html2canvas from "html2canvas";
 import { Header } from "@/components/invoice/Header";
 import { Branding } from "@/components/invoice/Branding";
 import { SignaturePad } from "@/components/invoice/SignaturePad";
+import { ClientSignaturePad } from "@/components/invoice/ClientSignaturePad";
 import { UserDetailsForm } from "@/components/invoice/UserDetailsForm";
 import { InvoiceMetaForm } from "@/components/invoice/InvoiceMetaForm";
 import { InvoiceItemsTable } from "@/components/invoice/InvoiceItemsTable";
@@ -75,6 +76,7 @@ const initialInvoice: InvoiceState = {
     signature: ""
   },
   notes: "Thank you for your business. Please make payment by the due date.",
+  clientSignature: "",
 };
 
 type DownloadQuality = "high" | "compressed" | "png";
@@ -111,28 +113,10 @@ const PrintButton = ({ printRef, data }: { printRef: React.RefObject<HTMLDivElem
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "mm",
-        format: 'a4',
+        format: [canvas.width * 0.264583, canvas.height * 0.264583],
       });
       
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const canvasWidth = canvas.width;
-      const canvasHeight = canvas.height;
-      const ratio = canvasWidth / pdfWidth;
-      const scaledCanvasHeight = canvasHeight / ratio;
-
-      let position = 0;
-      let page = 1;
-
-      while (position < scaledCanvasHeight) {
-        if (page > 1) {
-          pdf.addPage();
-        }
-        const pageHeight = Math.min(pdfHeight, scaledCanvasHeight - position);
-        pdf.addImage(imgData, quality === 'high' ? 'PNG' : 'JPEG', 0, -position, pdfWidth, scaledCanvasHeight, undefined, 'FAST');
-        position += pdfHeight;
-        page++;
-      }
+      pdf.addImage(imgData, quality === 'high' ? 'PNG' : 'JPEG', 0, 0, pdf.internal.pageSize.getWidth(), pdf.internal.pageSize.getHeight(), undefined, 'FAST');
       
       pdf.save(`invoice-${data.invoiceNumber || 'download'}.pdf`);
     };
@@ -226,7 +210,7 @@ export default function InvoicePage() {
     setData(prev => ({...prev, [field]: value}));
   };
 
-  const handleSimpleChange = (field: "invoiceNumber" | "notes", value: string) => {
+  const handleSimpleChange = (field: "invoiceNumber" | "notes" | "clientSignature", value: string) => {
     setData(prev => ({ ...prev, [field]: value }));
   };
   
@@ -408,6 +392,10 @@ export default function InvoicePage() {
                  signature={data.branding.signature}
                  onSignatureChange={(value) => handleBrandingChange('signature', value)}
                />
+               <ClientSignaturePad
+                  signature={data.clientSignature}
+                  onSignatureChange={(value) => handleSimpleChange('clientSignature', value)}
+                />
                <Card>
                 <CardHeader>
                   <CardTitle>Notes / Terms & Conditions</CardTitle>

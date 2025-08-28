@@ -17,7 +17,7 @@ export const InvoicePreview = React.forwardRef<
   HTMLDivElement,
   InvoicePreviewProps
 >(({ data, totals }, ref) => {
-  const { company, client, invoiceNumber, invoiceDate, dueDate, items, events, payment, branding, notes } = data;
+  const { company, client, invoiceNumber, invoiceDate, dueDate, items, events, payment, branding, notes, clientSignature } = data;
   const { subTotal, grandTotal, balanceDue, totalCgst, totalSgst, totalIgst, isIntraState } = totals;
 
   const qrValue = React.useMemo(() => {
@@ -179,18 +179,35 @@ export const InvoicePreview = React.forwardRef<
                 </div>
             )}
           </div>
-          {branding.signature && (
-             <div className="pt-8">
-              <h4 className="font-bold uppercase text-neutral-800 mb-2">Authorized Signature</h4>
-              {branding.signature.startsWith('data:image') ? (
-                <Image src={branding.signature} alt="Signature" width={150} height={75} className="object-contain" data-ai-hint="signature"/>
-              ) : (
-                <p className="font-semibold text-lg" style={{ fontFamily: '"Brush Script MT", cursive' }}>{branding.signature}</p>
-              )}
-              <p className="border-t border-neutral-400 pt-1 mt-2 font-semibold">{company.name}</p>
-            </div>
-          )}
-           <div className="whitespace-pre-wrap"><span className="font-bold">Notes / Terms:</span>{'\n'}{notes}</div>
+          
+          <div className="flex justify-between pt-8">
+            {branding.signature && (
+              <div className="w-1/2">
+                <h4 className="font-bold uppercase text-neutral-800 mb-2">Authorized Signature</h4>
+                {branding.signature.startsWith('data:image') ? (
+                  <Image src={branding.signature} alt="Signature" width={150} height={75} className="object-contain" data-ai-hint="signature"/>
+                ) : (
+                  <p className="font-semibold text-lg" style={{ fontFamily: '"Brush Script MT", cursive' }}>{branding.signature}</p>
+                )}
+                <p className="border-t border-neutral-400 pt-1 mt-2 font-semibold">{company.name}</p>
+              </div>
+            )}
+            {clientSignature && (
+              <div className="w-1/2 text-right">
+                <h4 className="font-bold uppercase text-neutral-800 mb-2">Client Signature</h4>
+                <div className="flex justify-end">
+                    {clientSignature.startsWith('data:image') ? (
+                        <Image src={clientSignature} alt="Client Signature" width={150} height={75} className="object-contain" data-ai-hint="signature"/>
+                    ) : (
+                        <p className="font-semibold text-lg" style={{ fontFamily: '"Brush Script MT", cursive' }}>{clientSignature}</p>
+                    )}
+                </div>
+                <p className="border-t border-neutral-400 pt-1 mt-2 font-semibold">{client.name}</p>
+              </div>
+            )}
+          </div>
+
+           <div className="whitespace-pre-wrap pt-8"><span className="font-bold">Notes / Terms:</span>{'\n'}{notes}</div>
           <div className="text-center pt-8">
             <p>This is a computer-generated invoice and does not require a signature.</p>
           </div>

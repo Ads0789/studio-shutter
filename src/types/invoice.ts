@@ -49,6 +49,7 @@ export interface InvoiceState {
   payment: PaymentDetails;
   branding: Branding;
   notes: string;
+  clientSignature: string;
 }
 
 export interface InvoiceTotals {
