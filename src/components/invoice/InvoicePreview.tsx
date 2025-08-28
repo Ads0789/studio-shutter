@@ -52,7 +52,7 @@ export const InvoicePreview = React.forwardRef<
   };
   
   return (
-    <div ref={ref} className="bg-white text-black text-sm p-12 font-serif" style={{width: '100%'}}>
+    <div ref={ref} className="bg-white text-black text-sm p-12 font-serif" style={{width: '210mm', minHeight: '297mm', position: 'relative', margin: 'auto'}}>
       {/* Watermark */}
       {branding.logo && branding.watermark && (
         <div className="absolute inset-0 flex items-center justify-center opacity-5 z-0 pointer-events-none">
@@ -60,7 +60,7 @@ export const InvoicePreview = React.forwardRef<
         </div>
       )}
       
-      <div className="relative z-10">
+      <div className="relative z-10 flex flex-col min-h-[calc(297mm-96px)]">
         <header>
           <div className="flex justify-between items-start mb-8">
             <div>
@@ -88,7 +88,7 @@ export const InvoicePreview = React.forwardRef<
           <p>Place of Supply: {client.state}</p>
         </section>
 
-        <section className="mb-8">
+        <section className="mb-8 flex-grow">
           <table className="w-full text-left">
             <thead className="bg-neutral-100">
               <tr>
@@ -102,7 +102,7 @@ export const InvoicePreview = React.forwardRef<
             </thead>
             <tbody>
               {items.map((item, index) => (
-                <tr key={item.id} className="border-b" style={{ pageBreakInside: 'avoid' }}>
+                <tr key={item.id} className="border-b">
                   <td className="p-2">{index + 1}</td>
                   <td className="p-2">{item.description}</td>
                   <td className="p-2">{item.hsn}</td>
@@ -115,7 +115,7 @@ export const InvoicePreview = React.forwardRef<
           </table>
         </section>
 
-        <section className="flex justify-end mb-8" style={{ pageBreakInside: 'avoid' }}>
+        <section className="flex justify-end mb-8">
           <div className="w-1/2 space-y-2">
             <div className="flex justify-between"><span className="text-neutral-600">Subtotal:</span> <span>{formatCurrency(subTotal)}</span></div>
             {isIntraState ? (
@@ -134,22 +134,24 @@ export const InvoicePreview = React.forwardRef<
           </div>
         </section>
 
-        <section className="mb-8 text-sm" style={{ pageBreakInside: 'avoid' }}>
+        <section className="mb-8 text-sm">
           <p><span className="font-bold">Amount in words:</span> {amountInWords(grandTotal)}</p>
         </section>
         
-        <section className="mb-8" style={{ pageBreakInside: 'auto' }}>
-            <h3 className="font-bold uppercase text-neutral-600 border-b pb-1 mb-2">Event Summary</h3>
-            {events.map(event => (
-              <div key={event.id} className="mb-4" style={{ pageBreakInside: 'avoid' }}>
-                <h4 className="font-bold text-neutral-800">{event.name}</h4>
-                <p className="text-xs text-neutral-600"><span className="font-bold">Team:</span> {event.team}</p>
-                <div className="text-xs text-neutral-600 whitespace-pre-wrap"><span className="font-bold">Deliverables:</span>{'\n'}{event.deliverables}</div>
-              </div>
-            ))}
-        </section>
+        {events && events.length > 0 && (
+          <section className="mb-8">
+              <h3 className="font-bold uppercase text-neutral-600 border-b pb-1 mb-2">Event Summary</h3>
+              {events.map(event => (
+                <div key={event.id} className="mb-4">
+                  <h4 className="font-bold text-neutral-800">{event.name}</h4>
+                  <p className="text-xs text-neutral-600"><span className="font-bold">Team:</span> {event.team}</p>
+                  <div className="text-xs text-neutral-600 whitespace-pre-wrap"><span className="font-bold">Deliverables:</span>{'\n'}{event.deliverables}</div>
+                </div>
+              ))}
+          </section>
+        )}
       
-        <footer className="text-xs text-neutral-600 space-y-4 pt-8 border-t border-neutral-200" style={{ pageBreakInside: 'avoid' }}>
+        <footer className="text-xs text-neutral-600 space-y-4 pt-8 border-t border-neutral-200 mt-auto">
           <div className="flex justify-between items-start">
             <div className="w-2/3 pr-4">
               <h4 className="font-bold uppercase text-neutral-800 mb-2">Payment Information</h4>
@@ -177,6 +179,17 @@ export const InvoicePreview = React.forwardRef<
                 </div>
             )}
           </div>
+          {branding.signature && (
+             <div className="pt-8">
+              <h4 className="font-bold uppercase text-neutral-800 mb-2">Authorized Signature</h4>
+              {branding.signature.startsWith('data:image') ? (
+                <Image src={branding.signature} alt="Signature" width={150} height={75} className="object-contain" data-ai-hint="signature"/>
+              ) : (
+                <p className="font-semibold text-lg" style={{ fontFamily: '"Brush Script MT", cursive' }}>{branding.signature}</p>
+              )}
+              <p className="border-t border-neutral-400 pt-1 mt-2 font-semibold">{company.name}</p>
+            </div>
+          )}
            <div className="whitespace-pre-wrap"><span className="font-bold">Notes / Terms:</span>{'\n'}{notes}</div>
           <div className="text-center pt-8">
             <p>This is a computer-generated invoice and does not require a signature.</p>
@@ -188,5 +201,3 @@ export const InvoicePreview = React.forwardRef<
 });
 
 InvoicePreview.displayName = "InvoicePreview";
-
-    

@@ -35,6 +35,7 @@ export interface Branding {
   logo: string; // will store data URL
   watermark: boolean;
   theme: "gold" | "royalBlue" | "pastelPink" | "classicBlack";
+  signature: string; // text or data URL for image
 }
 
 export interface InvoiceState {

@@ -80,6 +80,7 @@ export const sampleInvoice: InvoiceState = {
     logo: "",
     watermark: true,
     theme: "gold",
+    signature: "Shutter Surprise Studio",
   },
   notes: "Congratulations on your special day! We were honored to be a part of it.\n- 50% of the balance is due within 15 days.\n- Final deliverables will be provided after full payment.",
 };
