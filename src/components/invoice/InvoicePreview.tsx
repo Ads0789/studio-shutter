@@ -138,7 +138,7 @@ export const InvoicePreview = React.forwardRef<
           <p><span className="font-bold">Amount in words:</span> {amountInWords(grandTotal)}</p>
         </section>
         
-        <section className="mb-8" style={{ pageBreakBefore: 'auto' }}>
+        <section className="mb-8" style={{ pageBreakInside: 'auto' }}>
             <h3 className="font-bold uppercase text-neutral-600 border-b pb-1 mb-2">Event Summary</h3>
             {events.map(event => (
               <div key={event.id} className="mb-4" style={{ pageBreakInside: 'avoid' }}>
@@ -151,19 +151,33 @@ export const InvoicePreview = React.forwardRef<
       
         <footer className="text-xs text-neutral-600 space-y-4 pt-8 border-t border-neutral-200" style={{ pageBreakInside: 'avoid' }}>
           <div className="flex justify-between items-start">
-            <div className="whitespace-pre-wrap"><span className="font-bold">Notes / Terms:</span>{'\n'}{notes}</div>
+            <div className="w-2/3 pr-4">
+              <h4 className="font-bold uppercase text-neutral-800 mb-2">Payment Information</h4>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                {payment.bankName && (
+                  <>
+                    <span className="font-semibold">Bank Name:</span><span>{payment.bankName}</span>
+                    <span className="font-semibold">Account Holder:</span><span>{company.name}</span>
+                    <span className="font-semibold">Account Number:</span><span>{payment.accountNumber}</span>
+                    <span className="font-semibold">IFSC Code:</span><span>{payment.ifscCode}</span>
+                  </>
+                )}
+              </div>
+              {payment.bankName && payment.upiId && <Separator className="my-2" />}
+              {payment.upiId && (
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                  <span className="font-semibold">UPI ID:</span><span>{payment.upiId}</span>
+                </div>
+              )}
+            </div>
             {qrValue && (
-                <div className="text-center">
+                <div className="text-center shrink-0">
                     <QRCode value={qrValue} size={80} renderAs="canvas" />
-                    <p className="text-xs mt-1">Scan to Pay</p>
+                    <p className="text-xs mt-1 font-semibold">Scan to Pay</p>
                 </div>
             )}
           </div>
-          <div>
-            <p className="font-bold uppercase text-neutral-800">Payment Information</p>
-            <p>Bank: {payment.bankName}, A/C: {payment.accountNumber}, IFSC: {payment.ifscCode}</p>
-            <p>UPI ID: {payment.upiId}</p>
-          </div>
+           <div className="whitespace-pre-wrap"><span className="font-bold">Notes / Terms:</span>{'\n'}{notes}</div>
           <div className="text-center pt-8">
             <p>This is a computer-generated invoice and does not require a signature.</p>
           </div>
@@ -174,3 +188,5 @@ export const InvoicePreview = React.forwardRef<
 });
 
 InvoicePreview.displayName = "InvoicePreview";
+
+    
