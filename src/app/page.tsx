@@ -28,8 +28,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Printer, Download } from "lucide-react";
+import { Printer, Download, Eye, EyeOff } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 const initialInvoice: InvoiceState = {
   company: {
@@ -125,6 +126,7 @@ const PrintButton = ({ printRef }: { printRef: React.RefObject<HTMLDivElement> }
 export default function InvoicePage() {
   const [data, setData] = React.useState<InvoiceState>(initialInvoice);
   const [isClient, setIsClient] = React.useState(false);
+  const [showPreview, setShowPreview] = React.useState(false);
   const printRef = React.useRef<HTMLDivElement>(null);
 
   const { toast } = useToast();
@@ -286,10 +288,18 @@ export default function InvoicePage() {
         onSave={handleSave}
         onLoadSample={handleLoadSample}
       >
+        <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowPreview((prev) => !prev)}
+          >
+            {showPreview ? <EyeOff className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
+            {showPreview ? "Hide Preview" : "Show Preview"}
+        </Button>
         <PrintButton printRef={printRef}/>
       </Header>
       <main className="flex-1 overflow-hidden">
-        <div className="grid grid-cols-1 lg:grid-cols-2 h-full">
+        <div className={cn("grid h-full", showPreview ? "lg:grid-cols-2" : "grid-cols-1")}>
           <ScrollArea className="h-full">
             <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-4xl mx-auto">
               <Branding
@@ -364,15 +374,17 @@ export default function InvoicePage() {
             </div>
           </ScrollArea>
           
-          <div className="bg-muted/30 p-8 h-full overflow-auto">
-            <div className="bg-white shadow-lg mx-auto" style={{ width: '210mm', minHeight: '297mm'}}>
-                <InvoicePreview
-                    ref={printRef}
-                    data={data} 
-                    totals={{ subTotal, grandTotal, balanceDue, totalCgst, totalSgst, totalIgst, isIntraState }} 
-                />
+          {showPreview && (
+             <div className="bg-muted/30 p-8 h-full overflow-auto">
+                <div className="bg-white shadow-lg mx-auto" style={{ width: '210mm', minHeight: '297mm'}}>
+                    <InvoicePreview
+                        ref={printRef}
+                        data={data} 
+                        totals={{ subTotal, grandTotal, balanceDue, totalCgst, totalSgst, totalIgst, isIntraState }} 
+                    />
+                </div>
             </div>
-          </div>
+          )}
 
         </div>
       </main>
