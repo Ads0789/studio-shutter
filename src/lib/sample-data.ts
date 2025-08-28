@@ -82,6 +82,6 @@ export const sampleInvoice: InvoiceState = {
     theme: "gold",
     signature: "Shutter Surprise Studio",
   },
-  notes: "Congratulations on your special day! We were honored to be a part of it.\n- 50% of the balance is due within 15 days.\n- Final deliverables will be provided after full payment.",
+  notes: "Congratulations on your special day! We were honored to be a part of it.\n- 25% Advance Payment: To confirm the booking and secure the event date, a 25% advance payment is required at the time of booking.\n\n- 50% Payment: Due on the event date. This payment should be made before the event begins to ensure smooth execution.\n\n- 25% Final Payment: The remaining 25% balance is due after the completion of the event. Kindly settle the final payment within 7 days post-event.",
   clientSignature: "",
 };
