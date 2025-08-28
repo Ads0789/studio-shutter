@@ -92,14 +92,18 @@ const PrintButton = ({ printRef }: { printRef: React.RefObject<HTMLDivElement> }
           let heightLeft = imgHeight;
           let position = 0;
 
-          pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
-          heightLeft -= pdfHeight;
-
-          while (heightLeft > 0) {
-            position = position - pdfHeight;
-            pdf.addPage();
+          if (imgHeight < pdfHeight) {
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, imgHeight);
+          } else {
             pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
             heightLeft -= pdfHeight;
+
+            while (heightLeft > 0) {
+              position = position - pdfHeight;
+              pdf.addPage();
+              pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
+              heightLeft -= pdfHeight;
+            }
           }
           pdf.save("invoice.pdf");
         });
