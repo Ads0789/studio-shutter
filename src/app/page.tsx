@@ -74,50 +74,54 @@ const PrintButton = ({ printRef }: { printRef: React.RefObject<HTMLDivElement> }
         content: () => printRef.current,
     });
 
-    const handleDownload = () => {
+    const handleDownload = async () => {
       const input = printRef.current;
       if (!input) {
         alert("Could not find the invoice to download.");
         return;
       }
   
-      html2canvas(input, {
-        scale: 2,
-        useCORS: true,
-        logging: true,
-        scrollY: -window.scrollY, 
-        windowWidth: document.documentElement.offsetWidth,
-        windowHeight: document.documentElement.offsetHeight,
-      }).then((canvas) => {
+      try {
+        const canvas = await html2canvas(input, {
+            scale: 2, // Higher scale for better quality
+            useCORS: true,
+            logging: true,
+        });
+
         const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdf = new jsPDF({
+            orientation: 'p',
+            unit: 'mm',
+            format: 'a4',
+        });
+
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = pdf.internal.pageSize.getHeight();
-        
         const canvasWidth = canvas.width;
         const canvasHeight = canvas.height;
-        
         const ratio = canvasWidth / canvasHeight;
         const imgHeight = pdfWidth / ratio;
-        
+
         let heightLeft = imgHeight;
         let position = 0;
 
+        // Add the first page
         pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
         heightLeft -= pdfHeight;
 
+        // Add new pages if content overflows
         while (heightLeft > 0) {
-          position = heightLeft - imgHeight; 
-          pdf.addPage();
-          pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
-          heightLeft -= pdfHeight;
+            position = position - pdfHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+            heightLeft -= pdfHeight;
         }
-        
+
         pdf.save('invoice.pdf');
-      }).catch(err => {
+    } catch (err) {
         console.error("Error generating PDF:", err);
         alert("Sorry, there was an error generating the PDF. Please check the console for details.");
-      });
+    }
     };
 
     return (
@@ -403,5 +407,7 @@ export default function InvoicePage() {
     </div>
   );
 }
+
+    
 
     
