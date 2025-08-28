@@ -123,10 +123,10 @@ export const InvoicePreview = React.forwardRef<
         </section>
         
         {events.length > 0 && (
-          <section className="mb-8 break-inside-avoid">
+          <section className="mb-8" style={{ breakInside: 'avoid' }}>
             <h3 className="font-bold uppercase text-neutral-600 border-b pb-1 mb-2">Event Summary</h3>
             {events.map(event => (
-              <div key={event.id} className="mb-4">
+              <div key={event.id} className="mb-4" style={{ breakInside: 'avoid' }}>
                 <h4 className="font-bold text-neutral-800">{event.name}</h4>
                 <p className="text-xs text-neutral-600"><span className="font-bold">Team:</span> {event.team}</p>
                 <div className="text-xs text-neutral-600 whitespace-pre-wrap"><span className="font-bold">Deliverables:</span>{'\n'}{event.deliverables}</div>
