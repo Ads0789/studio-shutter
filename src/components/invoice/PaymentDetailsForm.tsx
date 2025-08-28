@@ -14,6 +14,14 @@ import { Label } from "@/components/ui/label";
 import { QrCode } from "lucide-react";
 import QRCode from "qrcode.react";
 import type { PaymentDetails } from "@/types/invoice";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { indianBanks } from "@/lib/banks";
 
 interface PaymentDetailsFormProps {
   payment: PaymentDetails;
@@ -67,12 +75,22 @@ export const PaymentDetailsForm: React.FC<PaymentDetailsFormProps> = ({
         </div>
         <div className="text-center my-2 text-xs text-muted-foreground">OR</div>
         <div className="space-y-2">
-          <Label htmlFor="bankName">Bank Name</Label>
-          <Input
-            id="bankName"
-            value={payment.bankName}
-            onChange={(e) => onPaymentChange("bankName", e.target.value)}
-          />
+            <Label htmlFor="bankName">Bank Name</Label>
+            <Select
+              value={payment.bankName}
+              onValueChange={(value) => onPaymentChange("bankName", value)}
+            >
+              <SelectTrigger id="bankName">
+                <SelectValue placeholder="Select Bank" />
+              </SelectTrigger>
+              <SelectContent>
+                {indianBanks.map((bank) => (
+                  <SelectItem key={bank} value={bank}>
+                    {bank}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
         </div>
         <div className="space-y-2">
           <Label htmlFor="accountNumber">Account Number</Label>
