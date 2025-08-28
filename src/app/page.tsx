@@ -69,42 +69,47 @@ const initialInvoice: InvoiceState = {
   notes: "Thank you for your business. Please make payment by the due date.",
 };
 
-const PrintButton = ({ printRef, data, totals }: { printRef: React.RefObject<HTMLDivElement>, data: InvoiceState, totals: any }) => {
+const PrintButton = ({ printRef, data }: { printRef: React.RefObject<HTMLDivElement>, data: InvoiceState }) => {
     const handlePrint = useReactToPrint({
         content: () => printRef.current,
     });
 
     const handleDownload = async () => {
-      const invoiceElement = printRef.current;
-      if (!invoiceElement) return;
-  
+      const input = printRef.current;
+      if (!input) {
+        console.error("Invoice preview element not found");
+        return;
+      }
+
+      // The A4 size in 'mm' is 210 x 297. We'll use this as our base.
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      
-      const canvas = await html2canvas(invoiceElement, {
-        scale: 2,
-        useCORS: true,
-        logging: true,
-        // Allow the canvas to be larger than the window
-        width: invoiceElement.scrollWidth,
-        height: invoiceElement.scrollHeight,
-        windowWidth: invoiceElement.scrollWidth,
-        windowHeight: invoiceElement.scrollHeight,
+
+      const canvas = await html2canvas(input, {
+          scale: 3, // Higher scale for better quality
+          useCORS: true,
+          logging: false, // Turn off logging for cleaner console
+          width: input.scrollWidth,
+          height: input.scrollHeight,
+          windowWidth: input.scrollWidth,
+          windowHeight: input.scrollHeight,
       });
 
       const imgData = canvas.toDataURL('image/png');
-      const imgWidth = pdfWidth;
+      const imgWidth = pdfWidth; 
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
       let heightLeft = imgHeight;
       let position = 0;
-  
+
+      // Add the first page
       pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
       heightLeft -= pdfHeight;
-  
+
+      // Add new pages if content overflows
       while (heightLeft > 0) {
-        position = position - pdfHeight;
+        position = -pdfHeight + (position * -1); // equivalent to `position -= pdfHeight;` but avoids negative zero issues
         pdf.addPage();
         pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
         heightLeft -= pdfHeight;
@@ -303,10 +308,10 @@ export default function InvoicePage() {
             {showPreview ? <EyeOff className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
             {showPreview ? "Hide Preview" : "Show Preview"}
         </Button>
-        <PrintButton printRef={printRef} data={data} totals={totals}/>
+        <PrintButton printRef={printRef} data={data}/>
       </Header>
       <main className="flex-1 overflow-hidden">
-        <div className={cn("grid h-full", showPreview ? "lg:grid-cols-2" : "grid-cols-1")}>
+        <div className={cn("grid h-full", showPreview ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1")}>
           <ScrollArea className="h-full">
             <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-4xl mx-auto">
               <Branding
@@ -382,8 +387,8 @@ export default function InvoicePage() {
           </ScrollArea>
           
           {showPreview && (
-             <div className="bg-muted/30 p-8 h-full overflow-auto">
-                <div className="bg-white shadow-lg mx-auto w-[210mm]">
+             <div className="bg-muted/30 p-4 lg:p-8 h-full overflow-auto">
+                <div className="bg-white shadow-lg mx-auto w-full lg:w-[210mm]">
                     <InvoicePreview
                         ref={printRef}
                         data={data} 
@@ -398,3 +403,5 @@ export default function InvoicePage() {
     </div>
   );
 }
+
+    
