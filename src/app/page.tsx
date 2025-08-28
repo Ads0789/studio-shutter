@@ -69,59 +69,48 @@ const initialInvoice: InvoiceState = {
   notes: "Thank you for your business. Please make payment by the due date.",
 };
 
-const PrintButton = ({ printRef }: { printRef: React.RefObject<HTMLDivElement> }) => {
+const PrintButton = ({ printRef, data, totals }: { printRef: React.RefObject<HTMLDivElement>, data: InvoiceState, totals: any }) => {
     const handlePrint = useReactToPrint({
         content: () => printRef.current,
     });
 
     const handleDownload = async () => {
-      const input = printRef.current;
-      if (!input) {
-        alert("Could not find the invoice to download.");
-        return;
-      }
+      const invoiceElement = printRef.current;
+      if (!invoiceElement) return;
   
-      try {
-        const canvas = await html2canvas(input, {
-            scale: 2, // Higher scale for better quality
-            useCORS: true,
-            logging: true,
-        });
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      const canvas = await html2canvas(invoiceElement, {
+        scale: 2,
+        useCORS: true,
+        logging: true,
+        // Allow the canvas to be larger than the window
+        width: invoiceElement.scrollWidth,
+        height: invoiceElement.scrollHeight,
+        windowWidth: invoiceElement.scrollWidth,
+        windowHeight: invoiceElement.scrollHeight,
+      });
 
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF({
-            orientation: 'p',
-            unit: 'mm',
-            format: 'a4',
-        });
-
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
-        const canvasWidth = canvas.width;
-        const canvasHeight = canvas.height;
-        const ratio = canvasWidth / canvasHeight;
-        const imgHeight = pdfWidth / ratio;
-
-        let heightLeft = imgHeight;
-        let position = 0;
-
-        // Add the first page
-        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+      const imgData = canvas.toDataURL('image/png');
+      const imgWidth = pdfWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      let heightLeft = imgHeight;
+      let position = 0;
+  
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight;
+  
+      while (heightLeft > 0) {
+        position = position - pdfHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
         heightLeft -= pdfHeight;
-
-        // Add new pages if content overflows
-        while (heightLeft > 0) {
-            position = position - pdfHeight;
-            pdf.addPage();
-            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
-            heightLeft -= pdfHeight;
-        }
-
-        pdf.save('invoice.pdf');
-    } catch (err) {
-        console.error("Error generating PDF:", err);
-        alert("Sorry, there was an error generating the PDF. Please check the console for details.");
-    }
+      }
+      
+      pdf.save(`invoice-${data.invoiceNumber || 'download'}.pdf`);
     };
 
     return (
@@ -298,6 +287,8 @@ export default function InvoicePage() {
     return null; // or a loading spinner
   }
 
+  const totals = { subTotal, grandTotal, balanceDue, totalCgst, totalSgst, totalIgst, isIntraState };
+
   return (
     <div className="flex flex-col h-screen bg-background text-foreground">
       <Header
@@ -312,7 +303,7 @@ export default function InvoicePage() {
             {showPreview ? <EyeOff className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
             {showPreview ? "Hide Preview" : "Show Preview"}
         </Button>
-        <PrintButton printRef={printRef}/>
+        <PrintButton printRef={printRef} data={data} totals={totals}/>
       </Header>
       <main className="flex-1 overflow-hidden">
         <div className={cn("grid h-full", showPreview ? "lg:grid-cols-2" : "grid-cols-1")}>
@@ -392,11 +383,11 @@ export default function InvoicePage() {
           
           {showPreview && (
              <div className="bg-muted/30 p-8 h-full overflow-auto">
-                <div className="bg-white shadow-lg mx-auto" style={{ width: '210mm', minHeight: '297mm'}}>
+                <div className="bg-white shadow-lg mx-auto w-[210mm]">
                     <InvoicePreview
                         ref={printRef}
                         data={data} 
-                        totals={{ subTotal, grandTotal, balanceDue, totalCgst, totalSgst, totalIgst, isIntraState }} 
+                        totals={totals} 
                     />
                 </div>
             </div>
@@ -407,7 +398,3 @@ export default function InvoicePage() {
     </div>
   );
 }
-
-    
-
-    
