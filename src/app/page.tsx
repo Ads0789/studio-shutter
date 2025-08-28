@@ -87,30 +87,17 @@ const PrintButton = ({ printRef, data }: { printRef: React.RefObject<HTMLDivElem
           logging: false,
       });
 
-      const imgData = canvas.toDataURL('image/png'); // Use PNG for uncompressed quality
-      const pdf = new jsPDF('p', 'mm', 'a4', true); // 'true' for compression (though minimal for PNG)
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      
+      const imgData = canvas.toDataURL('image/png');
       const canvasWidth = canvas.width;
       const canvasHeight = canvas.height;
-      const canvasAspectRatio = canvasWidth / canvasHeight;
       
-      let imgWidth = pdfWidth;
-      let imgHeight = pdfWidth / canvasAspectRatio;
+      // A4 width in mm is 210
+      const pdfWidth = 210;
+      const pdfHeight = (canvasHeight * pdfWidth) / canvasWidth;
+
+      const pdf = new jsPDF('p', 'mm', [pdfWidth, pdfHeight]);
       
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-      heightLeft -= pdfHeight;
-
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-        heightLeft -= pdfHeight;
-      }
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
       
       pdf.save(`invoice-${data.invoiceNumber || 'download'}.pdf`);
     };
