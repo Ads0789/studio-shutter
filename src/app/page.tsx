@@ -82,19 +82,35 @@ const PrintButton = ({ printRef, data }: { printRef: React.RefObject<HTMLDivElem
       }
 
       const canvas = await html2canvas(input, {
-          scale: 3, // Higher scale for better quality
+          scale: 1.5,
           useCORS: true,
           logging: false,
       });
 
-      const imgData = canvas.toDataURL('image/png');
-      const imgWidth = 210; // A4 width in mm
-      const pageHeight = 295; // A4 height in mm
-      const imgHeight = canvas.height * imgWidth / canvas.width;
+      const imgData = canvas.toDataURL('image/jpeg', 0.8);
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
       
-      const pdf = new jsPDF('p', 'mm', [imgWidth, imgHeight]);
+      const canvasWidth = canvas.width;
+      const canvasHeight = canvas.height;
+      const canvasAspectRatio = canvasWidth / canvasHeight;
       
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      let imgWidth = pdfWidth;
+      let imgHeight = pdfWidth / canvasAspectRatio;
+      
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+      heightLeft -= pdfHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+        heightLeft -= pdfHeight;
+      }
       
       pdf.save(`invoice-${data.invoiceNumber || 'download'}.pdf`);
     };
@@ -369,7 +385,7 @@ export default function InvoicePage() {
           
           {showPreview && (
              <div className="bg-muted/30 p-4 lg:p-8 h-full overflow-auto">
-                <div className="bg-white shadow-lg mx-auto w-full lg:w-[210mm]">
+                <div className="bg-white shadow-lg mx-auto w-full max-w-[210mm]">
                     <InvoicePreview
                         ref={printRef}
                         data={data} 
@@ -384,3 +400,5 @@ export default function InvoicePage() {
     </div>
   );
 }
+
+    
