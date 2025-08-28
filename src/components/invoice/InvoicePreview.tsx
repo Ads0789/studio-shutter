@@ -209,7 +209,7 @@ export const InvoicePreview = React.forwardRef<
 
            <div className="whitespace-pre-wrap pt-8"><span className="font-bold">Notes / Terms:</span>{'\n'}{notes}</div>
           <div className="text-center pt-8">
-            <p>This is a computer-generated invoice and does not require a signature.</p>
+            <p className="font-bold text-neutral-800">SHUTTER SURPRISE STUDIO</p>
           </div>
         </footer>
       </div>
