@@ -76,38 +76,42 @@ const PrintButton = ({ printRef }: { printRef: React.RefObject<HTMLDivElement> }
 
     const handleDownload = () => {
       const input = printRef.current;
-      if (input) {
-        html2canvas(input, {
-          scale: 3,
-          useCORS: true,
-        }).then((canvas) => {
-          const imgData = canvas.toDataURL("image/png");
-          const pdf = new jsPDF("p", "mm", "a4");
-          const pdfWidth = pdf.internal.pageSize.getWidth();
-          const pdfHeight = pdf.internal.pageSize.getHeight();
-          const canvasWidth = canvas.width;
-          const canvasHeight = canvas.height;
-          const ratio = canvasWidth / canvasHeight;
-          const imgHeight = pdfWidth / ratio;
-          let heightLeft = imgHeight;
-          let position = 0;
-
-          if (imgHeight < pdfHeight) {
-            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, imgHeight);
-          } else {
-            pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
-            heightLeft -= pdfHeight;
-
-            while (heightLeft > 0) {
-              position = position - pdfHeight;
-              pdf.addPage();
-              pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
-              heightLeft -= pdfHeight;
-            }
-          }
-          pdf.save("invoice.pdf");
-        });
-      }
+      if (!input) return;
+  
+      html2canvas(input, {
+        scale: 2, // Using a lower scale can sometimes improve reliability
+        useCORS: true,
+        logging: true,
+      }).then((canvas) => {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+        const ratio = canvasWidth / canvasHeight;
+        const imgHeight = pdfWidth / ratio;
+  
+        let heightLeft = imgHeight;
+        let position = 0;
+  
+        // Add the first page
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+        heightLeft -= pdfHeight;
+  
+        // Add subsequent pages if needed
+        while (heightLeft > 0) {
+          position -= pdfHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+          heightLeft -= pdfHeight;
+        }
+        
+        pdf.save('invoice.pdf');
+      }).catch(err => {
+        console.error("Error generating PDF:", err);
+        alert("Sorry, there was an error generating the PDF. Please try again.");
+      });
     };
 
     return (
