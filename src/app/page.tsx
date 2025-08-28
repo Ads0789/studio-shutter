@@ -28,9 +28,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Printer, Download, Eye, EyeOff } from "lucide-react";
+import { Printer, Download, Eye, EyeOff, ChevronDown, FileImage } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const initialInvoice: InvoiceState = {
   company: {
@@ -69,50 +75,77 @@ const initialInvoice: InvoiceState = {
   notes: "Thank you for your business. Please make payment by the due date.",
 };
 
+type DownloadQuality = "high" | "compressed" | "png";
+
 const PrintButton = ({ printRef, data }: { printRef: React.RefObject<HTMLDivElement>, data: InvoiceState }) => {
     const handlePrint = useReactToPrint({
         content: () => printRef.current,
     });
 
-    const handleDownload = async () => {
+    const handleDownload = async (quality: DownloadQuality) => {
       const input = printRef.current;
       if (!input) {
         console.error("Invoice preview element not found");
         return;
       }
-
+      
       const canvas = await html2canvas(input, {
-          scale: 3, // High scale for high resolution
+          scale: quality === "high" ? 3 : 1.5,
           useCORS: true,
           logging: false,
       });
 
-      const imgData = canvas.toDataURL('image/png');
+      if (quality === 'png') {
+        const imgData = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.download = `invoice-${data.invoiceNumber || 'download'}.png`;
+        link.href = imgData;
+        link.click();
+        return;
+      }
+
+      const imgData = canvas.toDataURL(quality === 'high' ? 'image/png' : 'image/jpeg', quality === 'high' ? 1.0 : 0.95);
       const canvasWidth = canvas.width;
       const canvasHeight = canvas.height;
       
-      // A4 width in mm is 210
       const pdfWidth = 210;
       const pdfHeight = (canvasHeight * pdfWidth) / canvasWidth;
 
       const pdf = new jsPDF('p', 'mm', [pdfWidth, pdfHeight]);
       
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.addImage(imgData, quality === 'high' ? 'PNG' : 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
       
       pdf.save(`invoice-${data.invoiceNumber || 'download'}.pdf`);
     };
 
     return (
-      <>
-        <Button size="sm" onClick={handleDownload} variant="outline">
-            <Download className="mr-2 h-4 w-4" />
-            Download PDF
-        </Button>
-        <Button size="sm" onClick={handlePrint}>
+      <div className="flex rounded-md border">
+        <Button size="sm" onClick={handlePrint} variant="outline" className="rounded-r-none border-r-0">
             <Printer className="mr-2 h-4 w-4" />
-            Export PDF
+            Print
         </Button>
-      </>
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="outline" className="rounded-l-none px-2">
+                    <ChevronDown className="h-4 w-4" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => handleDownload('high')}>
+                    <Download className="mr-2 h-4 w-4" />
+                    <span>High Quality PDF</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDownload('compressed')}>
+                    <Download className="mr-2 h-4 w-4" />
+                    <span>Compressed PDF</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDownload('png')}>
+                    <FileImage className="mr-2 h-4 w-4" />
+                    <span>Download as PNG</span>
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     );
   };
 
@@ -387,7 +420,5 @@ export default function InvoicePage() {
     </div>
   );
 }
-
-    
 
     
