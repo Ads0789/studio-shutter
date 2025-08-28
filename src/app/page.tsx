@@ -2,7 +2,7 @@
 "use client";
 
 import * as React from "react";
-import ReactToPrint, { useReactToPrint } from "react-to-print";
+import { useReactToPrint } from "react-to-print";
 import {
   type InvoiceState,
   type InvoiceItem,
@@ -12,6 +12,8 @@ import { sampleInvoice } from "@/lib/sample-data";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { indianStates } from "@/lib/states";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 import { Header } from "@/components/invoice/Header";
 import { Branding } from "@/components/invoice/Branding";
@@ -26,7 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Printer } from "lucide-react";
+import { Printer, Download } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const initialInvoice: InvoiceState = {
@@ -67,17 +69,54 @@ const initialInvoice: InvoiceState = {
 };
 
 const PrintButton = ({ printRef }: { printRef: React.RefObject<HTMLDivElement> }) => {
+    const handlePrint = useReactToPrint({
+        content: () => printRef.current,
+    });
+
+    const handleDownload = () => {
+      if (printRef.current) {
+        html2canvas(printRef.current, {
+          scale: 3, // Higher scale for better quality
+          useCORS: true, 
+        }).then((canvas) => {
+          const imgData = canvas.toDataURL('image/png');
+          const pdf = new jsPDF('p', 'mm', 'a4');
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfHeight = pdf.internal.pageSize.getHeight();
+          const canvasWidth = canvas.width;
+          const canvasHeight = canvas.height;
+          const ratio = canvasWidth / canvasHeight;
+          const width = pdfWidth;
+          const height = width / ratio;
+
+          let position = 0;
+          let pageHeight = pdf.internal.pageSize.height;
+          let heightLeft = canvas.height * (pdfWidth / canvas.width);
+          
+          pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, heightLeft);
+          heightLeft -= pageHeight;
+
+          while (heightLeft > 0) {
+            position = heightLeft - (canvas.height * (pdfWidth / canvas.width));
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, heightLeft);
+            heightLeft -= pageHeight;
+          }
+          pdf.save("invoice.pdf");
+        });
+      }
+    };
+
     return (
       <>
-        <ReactToPrint
-          trigger={() => (
-              <Button size="sm">
-                  <Printer className="mr-2 h-4 w-4" />
-                  Export PDF
-              </Button>
-          )}
-          content={() => printRef.current}
-        />
+        <Button size="sm" onClick={handleDownload} variant="outline">
+            <Download className="mr-2 h-4 w-4" />
+            Download PDF
+        </Button>
+        <Button size="sm" onClick={handlePrint}>
+            <Printer className="mr-2 h-4 w-4" />
+            Export PDF
+        </Button>
       </>
     );
   };
@@ -325,7 +364,7 @@ export default function InvoicePage() {
             </div>
           </ScrollArea>
           
-          <div className="hidden lg:block bg-muted/30 p-8 h-full overflow-auto">
+          <div className="bg-muted/30 p-8 h-full overflow-auto">
             <div className="bg-white shadow-lg mx-auto" style={{ width: '210mm', minHeight: '297mm'}}>
                 <InvoicePreview
                     ref={printRef}
