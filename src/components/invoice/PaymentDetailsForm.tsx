@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -50,7 +51,7 @@ export const PaymentDetailsForm: React.FC<PaymentDetailsFormProps> = ({
       <CardContent className="space-y-4">
         {qrValue && (
           <div className="flex flex-col items-center justify-center p-4 bg-muted/50 rounded-lg">
-            <QRCode value={qrValue} size={128} />
+            <QRCode value={qrValue} size={128} renderAs="canvas" />
             <p className="mt-2 text-xs text-muted-foreground">
               Scan to pay {grandTotal > 0 ? `₹${grandTotal.toFixed(2)}` : ""}
             </p>

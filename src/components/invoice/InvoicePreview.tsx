@@ -6,6 +6,7 @@ import Image from "next/image";
 import { formatCurrency } from "@/lib/utils";
 import type { InvoiceState, InvoiceTotals } from "@/types/invoice";
 import { Separator } from "../ui/separator";
+import QRCode from "qrcode.react";
 
 interface InvoicePreviewProps {
   data: InvoiceState;
@@ -18,6 +19,18 @@ export const InvoicePreview = React.forwardRef<
 >(({ data, totals }, ref) => {
   const { company, client, invoiceNumber, invoiceDate, dueDate, items, events, payment, branding, notes } = data;
   const { subTotal, grandTotal, balanceDue, totalCgst, totalSgst, totalIgst, isIntraState } = totals;
+
+  const qrValue = React.useMemo(() => {
+    if (payment.upiId) {
+      return `upi://pay?pa=${payment.upiId}&pn=${encodeURIComponent(
+        company.name || "Merchant"
+      )}&am=${grandTotal.toFixed(2)}&cu=INR`;
+    }
+    if (payment.bankName && payment.accountNumber && payment.ifscCode) {
+      return `Bank Details:\nName: ${company.name}\nBank: ${payment.bankName}\nA/C: ${payment.accountNumber}\nIFSC: ${payment.ifscCode}`;
+    }
+    return "";
+  }, [payment, grandTotal, company.name]);
 
   const amountInWords = (num: number): string => {
     const a = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
@@ -125,8 +138,7 @@ export const InvoicePreview = React.forwardRef<
           <p><span className="font-bold">Amount in words:</span> {amountInWords(grandTotal)}</p>
         </section>
         
-        {events.length > 0 && (
-          <section className="mb-8">
+        <section className="mb-8" style={{ pageBreakBefore: 'auto' }}>
             <h3 className="font-bold uppercase text-neutral-600 border-b pb-1 mb-2">Event Summary</h3>
             {events.map(event => (
               <div key={event.id} className="mb-4" style={{ pageBreakInside: 'avoid' }}>
@@ -135,11 +147,18 @@ export const InvoicePreview = React.forwardRef<
                 <div className="text-xs text-neutral-600 whitespace-pre-wrap"><span className="font-bold">Deliverables:</span>{'\n'}{event.deliverables}</div>
               </div>
             ))}
-          </section>
-        )}
+        </section>
       
         <footer className="text-xs text-neutral-600 space-y-4 pt-8 border-t border-neutral-200" style={{ pageBreakInside: 'avoid' }}>
-          <div className="whitespace-pre-wrap"><span className="font-bold">Notes / Terms:</span>{'\n'}{notes}</div>
+          <div className="flex justify-between items-start">
+            <div className="whitespace-pre-wrap"><span className="font-bold">Notes / Terms:</span>{'\n'}{notes}</div>
+            {qrValue && (
+                <div className="text-center">
+                    <QRCode value={qrValue} size={80} renderAs="canvas" />
+                    <p className="text-xs mt-1">Scan to Pay</p>
+                </div>
+            )}
+          </div>
           <div>
             <p className="font-bold uppercase text-neutral-800">Payment Information</p>
             <p>Bank: {payment.bankName}, A/C: {payment.accountNumber}, IFSC: {payment.ifscCode}</p>
