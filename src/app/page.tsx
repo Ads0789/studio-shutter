@@ -75,7 +75,7 @@ const initialInvoice: InvoiceState = {
     theme: "gold",
     signature: ""
   },
-  notes: "Thank you for your business. Please make payment by the due date.",
+  notes: "25% Advance Payment: To confirm the booking and secure the event date, a 25% advance payment is required at the time of booking.\n\n50% Payment: Due on the event date. This payment should be made before the event begins to ensure smooth execution.\n\n25% Final Payment: The remaining 25% balance is due after the completion of the event. Kindly settle the final payment within 7 days post-event.",
   clientSignature: "",
 };
 
