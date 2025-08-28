@@ -82,13 +82,13 @@ const PrintButton = ({ printRef, data }: { printRef: React.RefObject<HTMLDivElem
       }
 
       const canvas = await html2canvas(input, {
-          scale: 1.5,
+          scale: 3, // High scale for high resolution
           useCORS: true,
           logging: false,
       });
 
-      const imgData = canvas.toDataURL('image/jpeg', 0.8);
-      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgData = canvas.toDataURL('image/png'); // Use PNG for uncompressed quality
+      const pdf = new jsPDF('p', 'mm', 'a4', true); // 'true' for compression (though minimal for PNG)
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
       
@@ -102,13 +102,13 @@ const PrintButton = ({ printRef, data }: { printRef: React.RefObject<HTMLDivElem
       let heightLeft = imgHeight;
       let position = 0;
 
-      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
       heightLeft -= pdfHeight;
 
       while (heightLeft > 0) {
         position = heightLeft - imgHeight;
         pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
         heightLeft -= pdfHeight;
       }
       
@@ -400,5 +400,7 @@ export default function InvoicePage() {
     </div>
   );
 }
+
+    
 
     
