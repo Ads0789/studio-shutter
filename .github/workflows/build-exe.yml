@@ -1,0 +1,33 @@
+name: Build Windows EXE (Electron URL Wrapper)
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        run: npm ci || npm i
+
+      # Optional: URL ko env se override karna ho to yahan set karo
+      - name: Build EXE
+        env:
+          APP_URL: https://studio-shutter.vercel.app/   # <- apna URL
+        run: npx electron-builder --win portable
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-exe
+          path: dist/*.exe
