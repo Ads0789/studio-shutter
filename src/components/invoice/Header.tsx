@@ -20,7 +20,7 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="sticky top-0 z-40 w-full bg-background/80 backdrop-blur-sm border-b">
       <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
         <h1 className="text-xl sm:text-2xl font-bold text-primary font-headline">
-          SHUTTER SURPRISE STUDIO
+          SHUTTER SURPRISE
         </h1>
         <div className="flex items-center gap-2">
            <Button
